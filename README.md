@@ -11,7 +11,7 @@ Run `npm install` or `yarn install`
 The only required argument is URL. The output filename can be automatically generated.
 
 ```
-node index.js [--url <url>] [-dest <path>] [--width <pixels>] [--height <pixels] [--format <format>]
+node index.js [--url <url>] [-dest <path>] [--width <pixels>] [--height <pixels>] [--format <format>] [--wait <milliseconds>]
 ```
 
 e.g.
