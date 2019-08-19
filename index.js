@@ -1,19 +1,22 @@
 const formatDate = require("date-fns/format");
 const puppeteer = require("puppeteer");
 const sanitize = require("sanitize-filename");
+const fs = require("fs");
 let program = require("commander");
 
 // Parse arguments
 program
-  .version("0.1.0")
+  .version("0.2.0")
   .option("-u, --url <path>", "The URL of the page you want to screenshot")
+  .option("-i, --input <path>", "A file containing a list of URLs")
   .option("-d, --dest <path>", "The output file path")
   .option("-w, --width <pixels>", "The viewport width in pixels", parseInt)
   .option("-h, --height <pixels>", "The viewport height in pixels", parseInt)
   .option("-f, --format <format>", "The output file format")
   .option(
     "-t, --wait <milliseconds>",
-    "The amount of time in milliseconds to wait after pageload before taking the screenshot", parseInt
+    "The amount of time in milliseconds to wait after pageload before taking the screenshot",
+    parseInt
   )
   .parse(process.argv);
 
@@ -45,29 +48,50 @@ function buildFilename(url, format) {
  * @param {number} wait - The amount of time in milliseconds to wait after pageload before taking the screenshot.
  */
 async function run(
-  url,
+  url = null,
+  input = null,
   dest,
   width = 1920,
   height = 1080,
   format = "jpeg",
   waitTime = 0
 ) {
+  let urls = [];
+
+  if (input !== null) {
+    fs.readFile(input, (err, data) => {
+      if (err) throw err;
+      let array = data.toString().split("\n");
+      for (i in array) {
+        urls.push(array[i]);
+      }
+    });
+  } else {
+    urls.push(url);
+  }
+
   let browser = await puppeteer.launch();
   let page = await browser.newPage();
-  const outputPath = dest || buildFilename(url, format);
-  await page.setViewport({ width: width, height: height });
-  await page.goto(url);
-  if (waitTime) {
-    await page.waitFor(waitTime);
+
+  // Loop through all URLs and create a screenshot for each
+  for (let url of urls) {
+    const outputPath = dest || buildFilename(url, format);
+    await page.setViewport({ width: width, height: height });
+    await page.goto(url);
+    if (waitTime) {
+      await page.waitFor(waitTime);
+    }
+    await page.screenshot({ path: outputPath, type: format });
   }
-  await page.screenshot({ path: outputPath, type: format });
+
   await page.close();
   await browser.close();
 }
 
-if (program.url) {
+if (program.url || program.input) {
   run(
     program.url,
+    program.input,
     program.dest,
     program.width,
     program.height,
