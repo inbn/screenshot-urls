@@ -22,7 +22,7 @@ e.g.
 node index.js --url="https://www.google.com/" --width=1600 --height=900
 ```
 
-will generate a screenshot with the dimensions 1600 by 900 pixels and output it here: /.output/20190316T171616_httpswww.google.com.jpg
+will generate a screenshot with the dimensions 1600 by 900 pixels inside the `./output` folder. The auto-generated filename contains of a timestamp and sluggified version of the URL.
 
 ### Bulk
 
