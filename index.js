@@ -79,7 +79,7 @@ async function run(
     await page.setViewport({ width: width, height: height });
     await page.goto(url);
     if (waitTime) {
-      await page.waitFor(waitTime);
+      await page.waitForTimeout(waitTime);
     }
     await page.screenshot({ path: outputPath, type: format });
   }
