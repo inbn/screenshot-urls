@@ -81,7 +81,7 @@ async function run(
     if (waitTime) {
       await page.waitForTimeout(waitTime);
     }
-    await page.screenshot({ path: outputPath, type: format });
+    await page.screenshot({ path: outputPath, type: format, captureBeyondViewport: false });
   }
 
   await page.close();
