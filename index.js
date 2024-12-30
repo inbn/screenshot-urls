@@ -18,6 +18,7 @@ program
     "The amount of time in milliseconds to wait after pageload before taking the screenshot",
     parseInt
   )
+  .option("-s, --selector <selector>", "CSS selector of the element to capture")
   .parse(process.argv);
 
 /**
@@ -44,8 +45,9 @@ function buildFilename(url, format) {
  * @param {string} dest - The output file path.
  * @param {number} width - The viewport width in pixels.
  * @param {number} height - The viewport height in pixels.
- * @param {number} format - The output file format.
+ * @param {string} format - The output file format.
  * @param {number} wait - The amount of time in milliseconds to wait after pageload before taking the screenshot.
+ * @param {string} selector - CSS selector of the element to capture.
  */
 async function run(
   url = null,
@@ -54,7 +56,8 @@ async function run(
   width = 1920,
   height = 1080,
   format = "jpeg",
-  waitTime = 0
+  waitTime = 0,
+  selector = null
 ) {
   let urls = [];
 
@@ -81,7 +84,35 @@ async function run(
     if (waitTime) {
       await page.waitForTimeout(waitTime);
     }
-    await page.screenshot({ path: outputPath, type: format, captureBeyondViewport: false });
+
+    // If a CSS selector is provided, take a screenshot of the element
+    if (selector) {
+      const element = await page.$(selector);
+      if (!element) {
+        console.error(`Element not found for selector: ${selector}`);
+        continue;
+      }
+      const boundingBox = await element.boundingBox();
+      if (boundingBox) {
+        await page.screenshot({
+          path: outputPath,
+          type: format,
+          clip: {
+            x: boundingBox.x,
+            y: boundingBox.y,
+            width: boundingBox.width,
+            height: boundingBox.height,
+          },
+        });
+      }
+    } else {
+      // Take a full-page screenshot if no selector is provided
+      await page.screenshot({
+        path: outputPath,
+        type: format,
+        captureBeyondViewport: false,
+      });
+    }
   }
 
   await page.close();
@@ -96,6 +127,7 @@ if (program.url || program.input) {
     program.width,
     program.height,
     program.format,
-    program.wait
+    program.wait,
+    program.selector
   );
 }
